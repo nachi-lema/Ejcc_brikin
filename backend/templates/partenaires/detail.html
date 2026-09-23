@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}{{ partenaire.code_partenaire }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h3>{{ partenaire.nom_complet }} <code class="fs-6">{{ partenaire.code_partenaire }}</code></h3>
+        <p class="text-muted mb-0">
+            {{ partenaire.get_type_partenaire_display }} • {{ partenaire.telephone }}
+            {% if partenaire.email %} • {{ partenaire.email }}{% endif %}
+        </p>
+    </div>
+    <div>
+        {% if user.peut_gerer_partenaires %}
+        <a href="{% url 'partenaires:modifier' partenaire.pk %}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> Modifier</a>
+        {% if partenaire.statut == 'ACTIF' %}
+        <form method="post" action="{% url 'partenaires:desactiver' partenaire.pk %}" class="d-inline">{% csrf_token %}
+            <button class="btn btn-outline-warning" onclick="return confirm('Désactiver ce partenaire ?')"><i class="bi bi-pause-circle"></i> Désactiver</button>
+        </form>
+        {% else %}
+        <form method="post" action="{% url 'partenaires:reactiver' partenaire.pk %}" class="d-inline">{% csrf_token %}
+            <button class="btn btn-outline-success"><i class="bi bi-play-circle"></i> Réactiver</button>
+        </form>
+        {% endif %}
+        {% endif %}
+        <a href="{% url 'rapports_reports:partenaire' partenaire.pk %}" class="btn btn-outline-secondary"><i class="bi bi-file-text"></i> Rapport</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body">
+        <small class="text-muted">Statut</small>
+        <h5>{% if partenaire.statut == 'ACTIF' %}<span class="badge bg-success">Actif</span>{% else %}<span class="badge bg-secondary">Désactivé</span>{% endif %}</h5>
+    </div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body">
+        <small class="text-muted">Contribution</small>
+        <h5>{{ partenaire.montant_contribution }} {{ partenaire.devise }} / {{ partenaire.get_frequence_display }}</h5>
+    </div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body">
+        <small class="text-muted">Total payé</small>
+        <h5 class="text-success">{{ partenaire.total_paye|floatformat:2 }} {{ partenaire.devise }}</h5>
+    </div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body">
+        <small class="text-muted">Solde</small>
+        <h5 class="{% if partenaire.solde > 0 %}text-danger{% else %}text-success{% endif %}">
+            {{ partenaire.solde|floatformat:2 }} {{ partenaire.devise }}
+        </h5>
+    </div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between">
+                <strong>Derniers paiements</strong>
+                {% if user.peut_gerer_finances %}
+                <a href="{% url 'finances:paiement_create' %}?partenaire={{ partenaire.pk }}" class="btn btn-sm btn-primary">+ Paiement</a>
+                {% endif %}
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light"><tr><th>Réf.</th><th>Montant</th><th>Date</th><th>Mode</th><th>Statut</th></tr></thead>
+                    <tbody>
+                    {% for p in paiements %}
+                        <tr>
+                            <td><a href="{% url 'finances:paiement_detail' p.pk %}">{{ p.reference }}</a></td>
+                            <td>{{ p.montant }} {{ p.devise }}</td>
+                            <td>{{ p.date_paiement|date:"d/m/Y" }}</td>
+                            <td>{{ p.get_mode_paiement_display }}</td>
+                            <td>{% if p.statut == 'ACTIF' %}<span class="badge bg-success">Actif</span>{% else %}<span class="badge bg-danger">Annulé</span>{% endif %}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">Aucun paiement</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><strong>Contributions attendues</strong></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light"><tr><th>Période</th><th>Attendu</th><th>Payé</th><th>Statut</th></tr></thead>
+                    <tbody>
+                    {% for c in contributions %}
+                        <tr>
+                            <td>{{ c.periode_debut|date:"m/Y" }}</td>
+                            <td>{{ c.montant_attendu }}</td>
+                            <td>{{ c.montant_paye }}</td>
+                            <td>
+                                {% if c.statut == 'PAYE' %}<span class="badge bg-success">Payé</span>
+                                {% elif c.statut == 'PARTIEL' %}<span class="badge bg-warning">Partiel</span>
+                                {% elif c.statut == 'EN_RETARD' %}<span class="badge bg-danger">Retard</span>
+                                {% else %}<span class="badge bg-secondary">{{ c.get_statut_display }}</span>{% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="text-center text-muted py-3">Aucune contribution</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

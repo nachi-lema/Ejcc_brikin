@@ -2,4 +2,5 @@ from django.apps import AppConfig
 
 
 class PartenairesConfig(AppConfig):
-    name = 'partenaires'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.partenaires"

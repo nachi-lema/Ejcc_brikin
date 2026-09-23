@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h3 class="mb-4"><i class="bi bi-speedometer2"></i> Tableau de bord</h3>
+
+<div class="row g-3 mb-4">
+    {% with s=stats %}
+    <div class="col-md-3"><div class="card stat-card border-0 shadow-sm bg-primary text-white">
+        <div class="card-body"><small>Total partenaires</small><h3 class="mb-0">{{ s.total_partenaires }}</h3></div></div></div>
+    <div class="col-md-3"><div class="card stat-card border-0 shadow-sm bg-success text-white">
+        <div class="card-body"><small>Partenaires actifs</small><h3 class="mb-0">{{ s.partenaires_actifs }}</h3></div></div></div>
+    <div class="col-md-3"><div class="card stat-card border-0 shadow-sm bg-secondary text-white">
+        <div class="card-body"><small>Désactivés</small><h3 class="mb-0">{{ s.partenaires_desactives }}</h3></div></div></div>
+    <div class="col-md-3"><div class="card stat-card border-0 shadow-sm bg-danger text-white">
+        <div class="card-body"><small>En retard</small><h3 class="mb-0">{{ s.partenaires_en_retard }}</h3></div></div></div>
+    {% endwith %}
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card border-0 shadow-sm">
+        <div class="card-body"><small class="text-muted">Encaissé aujourd'hui</small>
+            <h4 class="text-primary mb-0">{{ stats.encaisse_jour|floatformat:2 }} $</h4></div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm">
+        <div class="card-body"><small class="text-muted">Ce mois</small>
+            <h4 class="text-primary mb-0">{{ stats.encaisse_mois|floatformat:2 }} $</h4></div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm">
+        <div class="card-body"><small class="text-muted">Ce trimestre</small>
+            <h4 class="text-primary mb-0">{{ stats.encaisse_trimestre|floatformat:2 }} $</h4></div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm">
+        <div class="card-body"><small class="text-muted">Cette année</small>
+            <h4 class="text-primary mb-0">{{ stats.encaisse_annee|floatformat:2 }} $</h4></div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white"><strong>Évolution des encaissements (6 derniers mois)</strong></div>
+            <div class="card-body"><canvas id="chartEncaissements" height="100"></canvas></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white"><strong>Synthèse</strong></div>
+            <div class="card-body">
+                <p><strong>Total attendu :</strong> {{ stats.total_attendu|floatformat:2 }} $</p>
+                <p><strong>Total payé :</strong> {{ stats.total_paye|floatformat:2 }} $</p>
+                <p><strong>Solde restant :</strong> <span class="text-danger fw-bold">{{ stats.solde_total|floatformat:2 }} $</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-white"><strong>Derniers paiements</strong></div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Référence</th><th>Partenaire</th><th>Montant</th><th>Date</th><th>Mode</th></tr></thead>
+            <tbody>
+            {% for p in derniers_paiements %}
+                <tr>
+                    <td><a href="{% url 'finances:paiement_detail' p.pk %}">{{ p.reference }}</a></td>
+                    <td>{{ p.partenaire.nom_complet }}</td>
+                    <td><strong>{{ p.montant }} {{ p.devise }}</strong></td>
+                    <td>{{ p.date_paiement|date:"d/m/Y" }}</td>
+                    <td><span class="badge bg-info">{{ p.get_mode_paiement_display }}</span></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-3">Aucun paiement</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+const ctx = document.getElementById('chartEncaissements');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [{
+            label: 'Encaissements',
+            data: {{ chart_values|safe }},
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13,110,253,0.1)',
+            fill: true, tension: 0.3
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+});
+</script>
+{% endblock %}
