@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Utilisateurs{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-0"><i class="bi bi-people-fill text-primary"></i> Utilisateurs</h3>
+        <p class="text-muted mb-0">Gestion des comptes et des rôles</p>
+    </div>
+    <a href="{% url 'accounts:utilisateur_create' %}" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i> Nouvel utilisateur
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2">
+            <div class="col-md-10">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" value="{{ q }}" class="form-control"
+                           placeholder="Rechercher par nom, prénom ou identifiant...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-primary w-100">Rechercher</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Email</th>
+                    <th>Téléphone</th>
+                    <th>Rôle</th>
+                    <th>Statut</th>
+                    <th>Dernière connexion</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in page_obj %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
+                                 style="width: 38px; height: 38px;">
+                                {{ u.username|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <div class="fw-semibold">{{ u.get_full_name|default:u.username }}</div>
+                                <small class="text-muted">@{{ u.username }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ u.email|default:"—" }}</td>
+                    <td>{{ u.phone|default:"—" }}</td>
+                    <td>
+                        {% if u.role == 'ADMIN' %}<span class="badge bg-danger">{{ u.get_role_display }}</span>
+                        {% elif u.role == 'TRESORIER' %}<span class="badge bg-success">{{ u.get_role_display }}</span>
+                        {% elif u.role == 'AGENT' %}<span class="badge bg-info text-dark">{{ u.get_role_display }}</span>
+                        {% else %}<span class="badge bg-secondary">{{ u.get_role_display }}</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if u.is_active %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="bi bi-check-circle"></i> Actif
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                <i class="bi bi-x-circle"></i> Inactif
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <small class="text-muted">
+                            {{ u.last_login|date:"d/m/Y H:i"|default:"Jamais" }}
+                        </small>
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'accounts:utilisateur_update' u.pk %}"
+                           class="btn btn-sm btn-outline-primary" title="Modifier">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% if u != request.user %}
+                        <form method="post" action="{% url 'accounts:utilisateur_toggle' u.pk %}"
+                              class="d-inline" onsubmit="return confirm('Confirmer le changement de statut ?')">
+                            {% csrf_token %}
+                            <button class="btn btn-sm {% if u.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}"
+                                    title="{% if u.is_active %}Désactiver{% else %}Activer{% endif %}">
+                                <i class="bi bi-{% if u.is_active %}pause-circle{% else %}play-circle{% endif %}"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7">
+                    <div class="empty-state">
+                        <i class="bi bi-person-x"></i>
+                        <h5>Aucun utilisateur trouvé</h5>
+                        <p>Commencez par créer un nouvel utilisateur.</p>
+                    </div>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'partials/pagination.html' with page_obj=page_obj %}
+{% endblock %}

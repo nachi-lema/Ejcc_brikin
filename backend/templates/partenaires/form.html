@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}{{ titre }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-0">
+            <i class="bi bi-person-plus text-primary"></i>
+            {{ titre }}
+        </h3>
+        <p class="text-muted mb-0 mt-1">
+            {% if partenaire %}
+                Code : <code>{{ partenaire.code_partenaire }}</code>
+            {% else %}
+                Un code unique sera généré automatiquement.
+            {% endif %}
+        </p>
+    </div>
+    <a href="{% url 'partenaires:liste' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<form method="post" novalidate id="partenaireForm">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger">
+        {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- SECTION 1 : Identité -->
+    <div class="form-section">
+        <div class="form-section-title">
+            <i class="bi bi-person-badge"></i> Identité du partenaire
+        </div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Nom <span class="text-danger">*</span></label>
+                {{ form.nom }}
+                {% if form.nom.errors %}<div class="text-danger small mt-1">{{ form.nom.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Postnom</label>
+                {{ form.postnom }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Prénom</label>
+                {{ form.prenom }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Téléphone <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                    {{ form.telephone }}
+                </div>
+                {% if form.telephone.errors %}<div class="text-danger small mt-1">{{ form.telephone.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    {{ form.email }}
+                </div>
+                {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+                <label class="form-label">Adresse</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                    {{ form.adresse }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 2 : Type & Adhésion -->
+    <div class="form-section">
+        <div class="form-section-title">
+            <i class="bi bi-tags"></i> Type & Adhésion
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Type de partenaire <span class="text-danger">*</span></label>
+                {{ form.type_partenaire }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Date d'adhésion <span class="text-danger">*</span></label>
+                {{ form.date_adhesion }}
+                {% if form.date_adhesion.errors %}<div class="text-danger small mt-1">{{ form.date_adhesion.errors.0 }}</div>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 3 : Contribution -->
+    <div class="form-section">
+        <div class="form-section-title">
+            <i class="bi bi-cash-stack"></i> Contribution financière
+        </div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Montant <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    {{ form.montant_contribution }}
+                    <span class="input-group-text" id="deviseLabel">$</span>
+                </div>
+                {% if form.montant_contribution.errors %}<div class="text-danger small mt-1">{{ form.montant_contribution.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Devise <span class="text-danger">*</span></label>
+                {{ form.devise }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Fréquence <span class="text-danger">*</span></label>
+                {{ form.frequence }}
+            </div>
+            <div class="col-12">
+                <label class="form-label">Observation</label>
+                {{ form.observation }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="d-flex justify-content-end gap-2 mb-5">
+        <a href="{% url 'partenaires:liste' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> Annuler
+        </a>
+        <button type="submit" class="btn btn-primary px-4" id="submitBtn">
+            <i class="bi bi-check-circle"></i>
+            {% if partenaire %}Enregistrer les modifications{% else %}Créer le partenaire{% endif %}
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Changer le symbole de devise automatiquement
+const deviseSelect = document.querySelector('select[name="devise"]');
+const deviseLabel = document.getElementById('deviseLabel');
+if (deviseSelect) {
+    deviseSelect.addEventListener('change', () => {
+        deviseLabel.textContent = deviseSelect.value === 'USD' ? '$' : 'FC';
+    });
+    deviseSelect.dispatchEvent(new Event('change'));
+}
+
+// Éviter double submit
+document.getElementById('partenaireForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-spinner"></span> Enregistrement...';
+});
+</script>
+{% endblock %}

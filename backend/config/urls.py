@@ -29,7 +29,7 @@ urlpatterns = [
     path('rapports/', include('apps.rapports.urls_reports')),
     path('notifications/', include('apps.notifications.urls')),
     path('historique/', include('apps.historique.urls')),
-    path('api/v1/', include('apps.api.urls')),
+    #path('api/v1/', include('apps.api.urls')),
 ]
 
 if settings.DEBUG:

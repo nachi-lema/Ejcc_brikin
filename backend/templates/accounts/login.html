@@ -1,24 +1,147 @@
-{% extends 'base.html' %}
-{% load crispy_forms_tags %}
-{% block title %}Connexion – EJCC BRIKIN{% endblock %}
-{% block content %}
-<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="col-md-5">
-        <div class="card shadow-lg border-0">
-            <div class="card-body p-5">
-                <div class="text-center mb-4">
-                    <h2 class="fw-bold text-primary">EJCC – BRIKIN</h2>
-                    <p class="text-muted">Gestion des partenaires et contributions</p>
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion – EJCC BRIKIN</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 50%, #1976d2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 1rem;
+        }
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            width: 100%;
+            max-width: 420px;
+            animation: slideUp 0.5s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-header {
+            background: linear-gradient(135deg, #0d47a1, #1565c0);
+            color: white;
+            padding: 2.5rem 2rem 2rem;
+            text-align: center;
+        }
+        .login-header i {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .login-header h3 { font-weight: 700; margin: 0; letter-spacing: 1px; }
+        .login-header p { margin: 0.5rem 0 0; opacity: 0.85; font-size: 0.9rem; }
+        .login-body { padding: 2rem; }
+        .form-control {
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+        }
+        .form-control:focus {
+            border-color: #1565c0;
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.15);
+        }
+        .input-group-text {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-right: none;
+            border-radius: 10px 0 0 10px;
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #0d47a1, #1565c0);
+            border: none;
+            color: white;
+            padding: 0.85rem;
+            border-radius: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 71, 161, 0.4);
+            color: white;
+        }
+        .footer-text {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div style="width: 100%; max-width: 420px;">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="bi bi-church"></i>
+                <h3>EJCC – BRIKIN</h3>
+                <p>Gestion des partenaires et contributions</p>
+            </div>
+            <div class="login-body">
+                {% if form.errors %}
+                <div class="alert alert-danger py-2">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Identifiants incorrects. Veuillez réessayer.
                 </div>
-                <form method="post">
+                {% endif %}
+                <form method="post" novalidate>
                     {% csrf_token %}
-                    {{ form|crispy }}
-                    <button type="submit" class="btn btn-primary w-100 mt-3">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nom d'utilisateur</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" name="username" class="form-control"
+                                   placeholder="Entrez votre identifiant" required autofocus>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Mot de passe</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" name="password" id="passwordInput"
+                                   class="form-control" placeholder="Entrez votre mot de passe" required>
+                            <button type="button" class="btn btn-outline-secondary"
+                                    onclick="togglePassword()" tabindex="-1">
+                                <i class="bi bi-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-login w-100">
                         <i class="bi bi-box-arrow-in-right"></i> Se connecter
                     </button>
                 </form>
             </div>
         </div>
+        <p class="footer-text">
+            © 2026 EJCC – BRIKIN. Tous droits réservés.
+        </p>
     </div>
-</div>
-{% endblock %}
+
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('passwordInput');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        }
+    </script>
+</body>
+</html>
