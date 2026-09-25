@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Rapport mensuel{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-0"><i class="bi bi-calendar-month text-primary"></i> Rapport mensuel</h3>
+        <p class="text-muted mb-0">{{ debut|date:"F Y"|capfirst }}</p>
+    </div>
+    <form method="get" class="d-flex gap-2">
+        <select name="mois" class="form-select" style="width: 130px;">
+            {% for m in "123456789"|make_list %}{% endfor %}
+            <option value="1" {% if mois == 1 %}selected{% endif %}>Janvier</option>
+            <option value="2" {% if mois == 2 %}selected{% endif %}>Février</option>
+            <option value="3" {% if mois == 3 %}selected{% endif %}>Mars</option>
+            <option value="4" {% if mois == 4 %}selected{% endif %}>Avril</option>
+            <option value="5" {% if mois == 5 %}selected{% endif %}>Mai</option>
+            <option value="6" {% if mois == 6 %}selected{% endif %}>Juin</option>
+            <option value="7" {% if mois == 7 %}selected{% endif %}>Juillet</option>
+            <option value="8" {% if mois == 8 %}selected{% endif %}>Août</option>
+            <option value="9" {% if mois == 9 %}selected{% endif %}>Septembre</option>
+            <option value="10" {% if mois == 10 %}selected{% endif %}>Octobre</option>
+            <option value="11" {% if mois == 11 %}selected{% endif %}>Novembre</option>
+            <option value="12" {% if mois == 12 %}selected{% endif %}>Décembre</option>
+        </select>
+        <input type="number" name="annee" value="{{ annee }}" class="form-control" style="width: 100px;">
+        <button class="btn btn-primary"><i class="bi bi-arrow-clockwise"></i></button>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card border-0 shadow-sm bg-success text-white">
+            <div class="card-body">
+                <small>Total encaissé</small>
+                <h3 class="mb-0">{{ total|floatformat:2 }} $</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card border-0 shadow-sm bg-primary text-white">
+            <div class="card-body">
+                <small>Nombre de paiements</small>
+                <h3 class="mb-0">{{ nb_paiements }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card border-0 shadow-sm bg-info text-white">
+            <div class="card-body">
+                <small>Partenaires payeurs</small>
+                <h3 class="mb-0">{{ partenaires_payeurs }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><strong>Détail des paiements</strong></div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>Référence</th><th>Partenaire</th><th>Montant</th><th>Date</th><th>Mode</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for p in paiements %}
+                        <tr>
+                            <td><code>{{ p.reference }}</code></td>
+                            <td>{{ p.partenaire.nom_complet }}</td>
+                            <td class="text-success fw-bold">{{ p.montant }} {{ p.devise }}</td>
+                            <td>{{ p.date_paiement|date:"d/m/Y" }}</td>
+                            <td><span class="badge bg-info-subtle text-info-emphasis">{{ p.get_mode_paiement_display }}</span></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-4">Aucun paiement ce mois</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white"><strong>Répartition par mode</strong></div>
+            <div class="card-body">
+                <canvas id="chartModes" height="180"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+new Chart(document.getElementById('chartModes'), {
+    type: 'doughnut',
+    data: {
+        labels: [{% for m in par_mode %}'{{ m.mode_paiement }}',{% endfor %}],
+        datasets: [{
+            data: [{% for m in par_mode %}{{ m.total }},{% endfor %}],
+            backgroundColor: ['#0d47a1', '#1565c0', '#42a5f5', '#90caf9', '#ffc107', '#ff9800']
+        }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } } }
+});
+</script>
+{% endblock %}

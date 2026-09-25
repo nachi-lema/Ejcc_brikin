@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Journal d'audit{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-0"><i class="bi bi-clock-history text-primary"></i> Journal d'audit</h3>
+        <p class="text-muted mb-0">Historique des opérations sensibles</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2">
+            <div class="col-md-4">
+                <select name="module" class="form-select">
+                    <option value="">Tous les modules</option>
+                    <option value="PARTENAIRE" {% if request.GET.module == 'PARTENAIRE' %}selected{% endif %}>Partenaire</option>
+                    <option value="PAIEMENT" {% if request.GET.module == 'PAIEMENT' %}selected{% endif %}>Paiement</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="action" class="form-select">
+                    <option value="">Toutes les actions</option>
+                    <option value="CREATE" {% if request.GET.action == 'CREATE' %}selected{% endif %}>Création</option>
+                    <option value="UPDATE" {% if request.GET.action == 'UPDATE' %}selected{% endif %}>Modification</option>
+                    <option value="DEACTIVATE" {% if request.GET.action == 'DEACTIVATE' %}selected{% endif %}>Désactivation</option>
+                    <option value="REACTIVATE" {% if request.GET.action == 'REACTIVATE' %}selected{% endif %}>Réactivation</option>
+                    <option value="CANCEL" {% if request.GET.action == 'CANCEL' %}selected{% endif %}>Annulation</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Module</th><th>Description</th><th>IP</th></tr>
+            </thead>
+            <tbody>
+            {% for h in page_obj %}
+                <tr>
+                    <td><small>{{ h.date_action|date:"d/m/Y H:i:s" }}</small></td>
+                    <td>
+                        {% if h.utilisateur %}
+                            {{ h.utilisateur.get_full_name|default:h.utilisateur.username }}
+                        {% else %}<span class="text-muted">Système</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if h.action == 'CREATE' %}<span class="badge bg-success">Création</span>
+                        {% elif h.action == 'UPDATE' %}<span class="badge bg-info">Modification</span>
+                        {% elif h.action == 'DEACTIVATE' %}<span class="badge bg-warning">Désactivation</span>
+                        {% elif h.action == 'REACTIVATE' %}<span class="badge bg-primary">Réactivation</span>
+                        {% elif h.action == 'CANCEL' %}<span class="badge bg-danger">Annulation</span>
+                        {% else %}<span class="badge bg-secondary">{{ h.action }}</span>{% endif %}
+                    </td>
+                    <td><code>{{ h.module }}</code></td>
+                    <td><small>{{ h.description }}</small></td>
+                    <td><small class="text-muted">{{ h.adresse_ip|default:"—" }}</small></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6"><div class="empty-state"><i class="bi bi-clock-history"></i><h5>Aucun historique</h5></div></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'partials/pagination.html' with page_obj=page_obj %}
+{% endblock %}

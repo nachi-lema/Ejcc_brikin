@@ -6,7 +6,7 @@ from django.utils import timezone
 class TypePartenaire(models.TextChoices):
     PARTICULIER = 'PARTICULIER', 'Particulier'
     ORGANISATION = 'ORGANISATION', 'Organisation'
-    ENTREPRISE = 'ENTREPRISE', 'Entreprise'
+    MEMBRE = 'MEMBRE', 'Membre'
 
 
 class Frequence(models.TextChoices):

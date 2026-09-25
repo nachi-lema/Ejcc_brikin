@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Situations en retard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-0"><i class="bi bi-exclamation-triangle text-danger"></i> Situations en retard</h3>
+        <p class="text-muted mb-0">Contributions dont l'échéance est dépassée</p>
+    </div>
+    <div class="text-end">
+        <small class="text-muted d-block">Total en retard</small>
+        <h4 class="text-danger mb-0">{{ total_retard|floatformat:2 }} $</h4>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Partenaire</th>
+                    <th>Période</th>
+                    <th>Échéance</th>
+                    <th>Attendu</th>
+                    <th>Payé</th>
+                    <th>Solde</th>
+                    <th>Statut</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in contributions %}
+                <tr>
+                    <td>
+                        <div class="fw-semibold">{{ c.partenaire.nom_complet }}</div>
+                        <small class="text-muted">{{ c.partenaire.code_partenaire }}</small>
+                    </td>
+                    <td>{{ c.periode_debut|date:"m/Y" }}</td>
+                    <td><span class="text-danger">{{ c.date_echeance|date:"d/m/Y" }}</span></td>
+                    <td>{{ c.montant_attendu|floatformat:2 }} $</td>
+                    <td class="text-success">{{ c.montant_paye|floatformat:2 }} $</td>
+                    <td class="text-danger fw-bold">{{ c.solde|floatformat:2 }} $</td>
+                    <td>
+                        {% if c.statut == 'PARTIEL' %}
+                            <span class="badge bg-warning text-dark">Partiel</span>
+                        {% else %}
+                            <span class="badge bg-danger">En retard</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        {% if user.peut_gerer_finances %}
+                        <a href="{% url 'finances:paiement_create' %}?partenaire={{ c.partenaire.pk }}"
+                           class="btn btn-sm btn-success">
+                            <i class="bi bi-cash"></i> Encaisser
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8">
+                    <div class="empty-state">
+                        <i class="bi bi-check-circle text-success"></i>
+                        <h5>Aucun retard</h5>
+                        <p>Tous les partenaires sont à jour !</p>
+                    </div>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

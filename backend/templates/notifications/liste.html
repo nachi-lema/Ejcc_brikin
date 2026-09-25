@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-0"><i class="bi bi-bell text-primary"></i> Notifications</h3>
+        <p class="text-muted mb-0">Vos alertes et rappels</p>
+    </div>
+    {% if notifications %}
+    <a href="{% url 'notifications:tout_marquer_lu' %}" class="btn btn-outline-primary">
+        <i class="bi bi-check2-all"></i> Tout marquer comme lu
+    </a>
+    {% endif %}
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="list-group list-group-flush">
+        {% for n in notifications %}
+        <a href="{% url 'notifications:marquer_lu' n.pk %}"
+           class="list-group-item list-group-item-action {% if not n.lu %}bg-light{% endif %}">
+            <div class="d-flex align-items-start gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center
+                    {% if n.type == 'SUCCESS' %}bg-success{% elif n.type == 'WARNING' %}bg-warning{% elif n.type == 'DANGER' %}bg-danger{% else %}bg-info{% endif %}
+                    bg-opacity-10
+                    {% if n.type == 'SUCCESS' %}text-success{% elif n.type == 'WARNING' %}text-warning{% elif n.type == 'DANGER' %}text-danger{% else %}text-info{% endif %}"
+                     style="width: 44px; height: 44px; flex-shrink: 0;">
+                    <i class="bi bi-{% if n.type == 'SUCCESS' %}check-circle{% elif n.type == 'WARNING' %}exclamation-triangle{% elif n.type == 'DANGER' %}exclamation-octagon{% else %}info-circle{% endif %} fs-5"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ n.titre }}</strong>
+                        <small class="text-muted">{{ n.created_at|date:"d/m/Y H:i" }}</small>
+                    </div>
+                    <p class="mb-0 text-muted small">{{ n.message }}</p>
+                </div>
+                {% if not n.lu %}
+                <span class="badge bg-primary rounded-pill">Nouveau</span>
+                {% endif %}
+            </div>
+        </a>
+        {% empty %}
+        <div class="empty-state">
+            <i class="bi bi-bell-slash"></i>
+            <h5>Aucune notification</h5>
+            <p>Vous êtes à jour !</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

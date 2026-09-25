@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% block title %}Nouveau paiement{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-0"><i class="bi bi-cash-coin text-success"></i> Nouveau paiement</h3>
+        <p class="text-muted mb-0">Enregistrer une contribution reçue</p>
+    </div>
+    <a href="{% url 'finances:paiements_liste' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <form method="post" novalidate id="paiementForm">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Partenaire -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-person-check"></i> Partenaire
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label">Sélectionner le partenaire <span class="text-danger">*</span></label>
+                        {% include 'widgets/partenaire_select.html' with partenaires=form.fields.partenaire.queryset form=form %}
+                        {% if form.partenaire.errors %}<div class="text-danger small mt-1">{{ form.partenaire.errors.0 }}</div>{% endif %}
+                        <div id="partenaireInfo" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Détails du paiement -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-receipt"></i> Détails du paiement
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Montant <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            {{ form.montant }}
+                            <span class="input-group-text" id="deviseLabelP">$</span>
+                        </div>
+                        {% if form.montant.errors %}<div class="text-danger small mt-1">{{ form.montant.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Devise <span class="text-danger">*</span></label>
+                        {{ form.devise }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Date du paiement <span class="text-danger">*</span></label>
+                        {{ form.date_paiement }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Mode de paiement <span class="text-danger">*</span></label>
+                        {{ form.mode_paiement }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Référence transaction</label>
+                        {{ form.reference_transaction }}
+                        <div class="form-text">Numéro de bordereau, transaction mobile money, etc.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Période couverte -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-calendar-range"></i> Période couverte
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Début de période <span class="text-danger">*</span></label>
+                        {{ form.periode_debut }}
+                        {% if form.periode_debut.errors %}<div class="text-danger small mt-1">{{ form.periode_debut.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Fin de période <span class="text-danger">*</span></label>
+                        {{ form.periode_fin }}
+                        {% if form.periode_fin.errors %}<div class="text-danger small mt-1">{{ form.periode_fin.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Commentaire</label>
+                        {{ form.commentaire }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mb-5">
+                <a href="{% url 'finances:paiements_liste' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-success px-4" id="submitBtn">
+                    <i class="bi bi-check-circle"></i> Enregistrer le paiement
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Panneau latéral : résumé partenaire -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm sticky-top" style="top: 90px;">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-info-circle"></i> Informations partenaire
+            </div>
+            <div class="card-body" id="sidePanel">
+                <p class="text-muted text-center mb-0 py-3">
+                    <i class="bi bi-arrow-left-circle"></i><br>
+                    Sélectionnez un partenaire pour voir sa situation
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const partenaireSelect = document.querySelector('select[name="partenaire"]');
+const infoBox = document.getElementById('partenaireInfo');
+const sidePanel = document.getElementById('sidePanel');
+const deviseSelect = document.querySelector('select[name="devise"]');
+const deviseLabelP = document.getElementById('deviseLabelP');
+const montantInput = document.querySelector('input[name="montant"]');
+
+// Devise
+if (deviseSelect) {
+    deviseSelect.addEventListener('change', () => {
+        deviseLabelP.textContent = deviseSelect.value === 'USD' ? '$' : 'FC';
+    });
+    deviseSelect.dispatchEvent(new Event('change'));
+}
+
+// Charger les infos du partenaire via l'attribut data
+if (partenaireSelect) {
+    partenaireSelect.addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        if (!opt.value) {
+            infoBox.innerHTML = '';
+            sidePanel.innerHTML = '<p class="text-muted text-center mb-0 py-3">Sélectionnez un partenaire</p>';
+            return;
+        }
+        const data = {
+            nom: opt.dataset.nom || '',
+            code: opt.dataset.code || '',
+            tel: opt.dataset.tel || '',
+            contribution: opt.dataset.contribution || '',
+            devise: opt.dataset.devise || '',
+            frequence: opt.dataset.frequence || '',
+            statut: opt.dataset.statut || '',
+            totalPaye: opt.dataset.totalpaye || '0',
+            solde: opt.dataset.solde || '0',
+        };
+
+        infoBox.innerHTML = `
+            <div class="alert alert-info mb-0">
+                <strong>${data.nom}</strong> <code>${data.code}</code><br>
+                <small><i class="bi bi-telephone"></i> ${data.tel}</small>
+            </div>`;
+
+        const statutBadge = data.statut === 'ACTIF'
+            ? '<span class="badge bg-success">Actif</span>'
+            : '<span class="badge bg-secondary">Désactivé</span>';
+
+        sidePanel.innerHTML = `
+            <h5 class="mb-1">${data.nom}</h5>
+            <p class="text-muted small mb-3">${data.code} ${statutBadge}</p>
+            <hr>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted">Contribution :</span>
+                <strong>${data.contribution} ${data.devise}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted">Fréquence :</span>
+                <strong>${data.frequence}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted">Total payé :</span>
+                <strong class="text-success">${data.totalPaye} ${data.devise}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-0">
+                <span class="text-muted">Solde :</span>
+                <strong class="${parseFloat(data.solde) > 0 ? 'text-danger' : 'text-success'}">
+                    ${data.solde} ${data.devise}
+                </strong>
+            </div>
+        `;
+
+        // Pré-remplir le montant si vide
+        if (!montantInput.value && data.contribution) {
+            montantInput.value = data.contribution;
+        }
+        if (deviseSelect && data.devise) {
+            deviseSelect.value = data.devise;
+            deviseSelect.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // Déclencher au chargement si déjà sélectionné
+    if (partenaireSelect.value) partenaireSelect.dispatchEvent(new Event('change'));
+}
+
+// Double submit
+document.getElementById('paiementForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-spinner"></span> Enregistrement...';
+});
+
+// Auto-complétion des périodes : si début rempli, mettre fin = fin du mois
+const debutInput = document.querySelector('input[name="periode_debut"]');
+const finInput = document.querySelector('input[name="periode_fin"]');
+if (debutInput && finInput) {
+    debutInput.addEventListener('change', () => {
+        if (debutInput.value && !finInput.value) {
+            const d = new Date(debutInput.value);
+            const fin = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+            finInput.value = fin.toISOString().split('T')[0];
+        }
+    });
+}
+</script>
+{% endblock %}

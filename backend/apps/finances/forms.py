@@ -1,5 +1,6 @@
 from django import forms
 from .models import Paiement, ContributionAttendue
+from apps.partenaires.models import Partenaire
 
 
 class PaiementForm(forms.ModelForm):
@@ -19,6 +20,12 @@ class PaiementForm(forms.ModelForm):
             'reference_transaction': forms.TextInput(attrs={'class': 'form-control'}),
             'commentaire': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Inclure TOUS les partenaires (actifs en premier, désactivés en bas)
+        qs = Partenaire.objects.all().order_by('statut', 'nom')
+        self.fields['partenaire'].queryset = qs
 
     def clean(self):
         cleaned = super().clean()

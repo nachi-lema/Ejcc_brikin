@@ -74,7 +74,11 @@ def paiement_create(request):
                    f"Paiement {paiement.reference} - {paiement.montant} {paiement.devise}")
         messages.success(request, f"Paiement {paiement.reference} enregistré.")
         return redirect('finances:paiement_detail', pk=paiement.pk)
-    return render(request, 'finances/paiement_form.html', {'form': form, 'titre': 'Nouveau paiement'})
+    return render(request, 'finances/paiement_form.html', {
+        'form': form,
+        'titre': 'Nouveau paiement',
+        'partenaires': form.fields['partenaire'].queryset,  # ← pour le widget custom
+    })
 
 
 @login_required

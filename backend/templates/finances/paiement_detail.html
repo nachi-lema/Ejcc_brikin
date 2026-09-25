@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block title %}Paiement {{ paiement.reference }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-0">
+            <i class="bi bi-receipt text-primary"></i>
+            Paiement <code>{{ paiement.reference }}</code>
+        </h3>
+        <p class="text-muted mb-0">
+            {% if paiement.statut == 'ACTIF' %}
+                <span class="badge bg-success">Actif</span>
+            {% else %}
+                <span class="badge bg-danger">Annulé</span>
+            {% endif %}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'finances:paiements_liste' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-primary">
+            <i class="bi bi-printer"></i> Imprimer
+        </button>
+        {% if user.peut_gerer_finances and paiement.statut == 'ACTIF' %}
+        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+            <i class="bi bi-x-circle"></i> Annuler
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <!-- Reçu -->
+        <div class="card border-0 shadow-sm" id="receipt">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
+                    <div>
+                        <h4 class="text-primary mb-1"><i class="bi bi-church"></i> EJCC – BRIKIN</h4>
+                        <small class="text-muted">Reçu officiel de contribution</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="badge bg-primary fs-6">{{ paiement.reference }}</div>
+                        <div class="text-muted small mt-1">{{ paiement.date_paiement|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted small text-uppercase">Partenaire</h6>
+                        <p class="mb-0 fw-semibold">{{ paiement.partenaire.nom_complet }}</p>
+                        <p class="mb-0 text-muted small">Code : <code>{{ paiement.partenaire.code_partenaire }}</code></p>
+                        <p class="mb-0 text-muted small"><i class="bi bi-telephone"></i> {{ paiement.partenaire.telephone }}</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <h6 class="text-muted small text-uppercase">Montant</h6>
+                        <h3 class="text-success mb-0">{{ paiement.montant|floatformat:2 }} {{ paiement.devise }}</h3>
+                        <small class="text-muted">{{ paiement.get_mode_paiement_display }}</small>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted small text-uppercase">Période couverte</h6>
+                        <p class="mb-0">Du <strong>{{ paiement.periode_debut|date:"d/m/Y" }}</strong>
+                           au <strong>{{ paiement.periode_fin|date:"d/m/Y" }}</strong></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted small text-uppercase">Référence transaction</h6>
+                        <p class="mb-0">{{ paiement.reference_transaction|default:"—" }}</p>
+                    </div>
+                    {% if paiement.commentaire %}
+                    <div class="col-12">
+                        <h6 class="text-muted small text-uppercase">Commentaire</h6>
+                        <p class="mb-0">{{ paiement.commentaire }}</p>
+                    </div>
+                    {% endif %}
+                    <div class="col-12">
+                        <h6 class="text-muted small text-uppercase">Enregistré par</h6>
+                        <p class="mb-0">
+                            {{ paiement.enregistre_par.get_full_name|default:paiement.enregistre_par.username }}
+                            <small class="text-muted">({{ paiement.enregistre_par.get_role_display }})</small>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="border-top mt-4 pt-3 text-center text-muted small">
+                    Document généré électroniquement le {{ paiement.created_at|date:"d/m/Y à H:i" }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Infos complémentaires -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white"><strong>Métadonnées</strong></div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-6 text-muted">Créé le</dt>
+                    <dd class="col-6">{{ paiement.created_at|date:"d/m/Y H:i" }}</dd>
+                    <dt class="col-6 text-muted">Modifié le</dt>
+                    <dd class="col-6">{{ paiement.updated_at|date:"d/m/Y H:i" }}</dd>
+                    <dt class="col-6 text-muted">Devise</dt>
+                    <dd class="col-6">{{ paiement.devise }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        {% if paiement.partenaire %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><strong>Situation partenaire</strong></div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">Total payé</span>
+                    <strong class="text-success">{{ paiement.partenaire.total_paye|floatformat:2 }} {{ paiement.devise }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted small">Solde</span>
+                    <strong class="{% if paiement.partenaire.solde > 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ paiement.partenaire.solde|floatformat:2 }} {{ paiement.devise }}
+                    </strong>
+                </div>
+                <a href="{% url 'partenaires:detail' paiement.partenaire.pk %}"
+                   class="btn btn-outline-primary btn-sm w-100">
+                    <i class="bi bi-eye"></i> Voir la fiche complète
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal annulation -->
+{% if user.peut_gerer_finances and paiement.statut == 'ACTIF' %}
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="post" action="{% url 'finances:paiement_annuler' paiement.pk %}">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Annuler ce paiement
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Confirmez-vous l'annulation du paiement <strong>{{ paiement.reference }}</strong> d'un montant de <strong>{{ paiement.montant }} {{ paiement.devise }}</strong> ?</p>
+                    <p class="text-muted small mb-0">
+                        Le paiement restera consultable mais ne sera plus comptabilisé.
+                        Cette action est traçable dans le journal d'audit.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle"></i> Confirmer
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .navbar, .btn, .modal, .card-header { display: none !important; }
+    #receipt { box-shadow: none !important; border: 1px solid #ddd; }
+    body { background: white; }
+}
+</style>
+{% endblock %}

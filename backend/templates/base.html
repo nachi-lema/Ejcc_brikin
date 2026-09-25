@@ -12,130 +12,203 @@
 </head>
 <body>
 {% if user.is_authenticated %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold" href="{% url 'rapports:dashboard' %}">
-            <i class="bi bi-church"></i> EJCC – BRIKIN
-        </a>
-        <button class="navbar-toggler border-0" data-bs-toggle="collapse" data-bs-target="#navMain">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navMain">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active bg-white bg-opacity-10{% endif %}"
-                       href="{% url 'rapports:dashboard' %}">
-                        <i class="bi bi-speedometer2"></i> Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'partenaires:liste' %}">
-                        <i class="bi bi-people"></i> Partenaires
-                    </a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">
-                        <i class="bi bi-cash-coin"></i> Finances
-                    </a>
-                    <ul class="dropdown-menu shadow border-0">
-                        <li><a class="dropdown-item" href="{% url 'finances:paiements_liste' %}"><i class="bi bi-list-ul"></i> Tous les paiements</a></li>
-                        {% if user.peut_gerer_finances %}
-                        <li><a class="dropdown-item" href="{% url 'finances:paiement_create' %}"><i class="bi bi-plus-circle"></i> Nouveau paiement</a></li>
-                        {% endif %}
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{% url 'finances:situation_financiere' %}"><i class="bi bi-exclamation-triangle"></i> Situations en retard</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">
-                        <i class="bi bi-file-bar-graph"></i> Rapports
-                    </a>
-                    <ul class="dropdown-menu shadow border-0">
-                        <li><a class="dropdown-item" href="{% url 'rapports_reports:mensuel' %}"><i class="bi bi-calendar-month"></i> Mensuel</a></li>
-                        <li><a class="dropdown-item" href="{% url 'rapports_reports:trimestriel' %}"><i class="bi bi-calendar-quarter"></i> Trimestriel</a></li>
-                        <li><a class="dropdown-item" href="{% url 'rapports_reports:annuel' %}"><i class="bi bi-calendar-year"></i> Annuel</a></li>
-                    </ul>
-                </li>
-                {% if user.is_admin %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">
-                        <i class="bi bi-gear"></i> Administration
-                    </a>
-                    <ul class="dropdown-menu shadow border-0">
-                        <li><a class="dropdown-item" href="{% url 'accounts:utilisateurs_list' %}"><i class="bi bi-person-gear"></i> Utilisateurs</a></li>
-                        <li><a class="dropdown-item" href="{% url 'historique:liste' %}"><i class="bi bi-clock-history"></i> Journal d'audit</a></li>
-                        <li><a class="dropdown-item" href="/admin/"><i class="bi bi-shield-lock"></i> Admin Django</a></li>
-                    </ul>
-                </li>
+<div class="app-layout">
+
+    <!-- ============ SIDEBAR GAUCHE ============ -->
+    <aside class="app-sidebar" id="appSidebar">
+        <div class="sidebar-brand">
+            <i class="bi bi-church"></i>
+            <div>
+                <div class="brand-title">EJCC</div>
+                <div class="brand-sub">BRIKIN</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">Navigation</div>
+
+            <a href="{% url 'rapports:dashboard' %}"
+               class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="{% url 'partenaires:liste' %}"
+               class="sidebar-link {% if 'partenaires' in request.resolver_match.namespace %}active{% endif %}">
+                <i class="bi bi-people"></i>
+                <span>Partenaires</span>
+            </a>
+
+            <div class="sidebar-section">Finances</div>
+
+            <a href="{% url 'finances:paiements_liste' %}"
+               class="sidebar-link {% if request.resolver_match.url_name == 'paiements_liste' %}active{% endif %}">
+                <i class="bi bi-list-ul"></i>
+                <span>Paiements</span>
+            </a>
+
+            {% if user.peut_gerer_finances %}
+            <a href="{% url 'finances:paiement_create' %}"
+               class="sidebar-link {% if request.resolver_match.url_name == 'paiement_create' %}active{% endif %}">
+                <i class="bi bi-plus-circle"></i>
+                <span>Nouveau paiement</span>
+            </a>
+            {% endif %}
+
+            <a href="{% url 'finances:situation_financiere' %}"
+               class="sidebar-link {% if request.resolver_match.url_name == 'situation_financiere' %}active{% endif %}">
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>Retards</span>
+            </a>
+
+            <div class="sidebar-section">Rapports</div>
+
+            <a href="{% url 'rapports_reports:mensuel' %}"
+               class="sidebar-link {% if request.resolver_match.url_name == 'mensuel' %}active{% endif %}">
+                <i class="bi bi-calendar-month"></i>
+                <span>Mensuel</span>
+            </a>
+
+            <a href="{% url 'rapports_reports:trimestriel' %}"
+               class="sidebar-link {% if request.resolver_match.url_name == 'trimestriel' %}active{% endif %}">
+                <i class="bi bi-calendar3"></i>
+                <span>Trimestriel</span>
+            </a>
+
+            <a href="{% url 'rapports_reports:annuel' %}"
+               class="sidebar-link {% if request.resolver_match.url_name == 'annuel' %}active{% endif %}">
+                <i class="bi bi-calendar-range"></i>
+                <span>Annuel</span>
+            </a>
+
+            {% if user.is_admin %}
+            <div class="sidebar-section">Administration</div>
+
+            <a href="{% url 'accounts:utilisateurs_list' %}"
+               class="sidebar-link {% if 'utilisateur' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-person-gear"></i>
+                <span>Utilisateurs</span>
+            </a>
+
+            <a href="{% url 'historique:liste' %}"
+               class="sidebar-link {% if request.resolver_match.url_name == 'liste' and request.resolver_match.namespace == 'historique' %}active{% endif %}">
+                <i class="bi bi-clock-history"></i>
+                <span>Journal d'audit</span>
+            </a>
+
+            <a href="/admin/" class="sidebar-link" target="_blank">
+                <i class="bi bi-shield-lock"></i>
+                <span>Admin Django</span>
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="{% url 'notifications:liste' %}" class="sidebar-link">
+                <i class="bi bi-bell"></i>
+                <span>Notifications</span>
+                {% if notifications_non_lues %}
+                <span class="badge bg-warning text-dark ms-auto">{{ notifications_non_lues }}</span>
                 {% endif %}
-            </ul>
-            <ul class="navbar-nav">
-                <li class="nav-item position-relative me-2">
-                    <a class="nav-link" href="{% url 'notifications:liste' %}" title="Notifications">
-                        <i class="bi bi-bell fs-5"></i>
-                        {% if notifications_non_lues %}
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
-                            {{ notifications_non_lues }}
-                        </span>
-                        {% endif %}
-                    </a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" href="#">
-                        <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center fw-bold"
-                             style="width: 34px; height: 34px; font-size: 0.85rem;">
+            </a>
+            <a href="{% url 'accounts:profil' %}" class="sidebar-link">
+                <i class="bi bi-person-circle"></i>
+                <span>Mon profil</span>
+            </a>
+            <a href="{% url 'accounts:logout' %}" class="sidebar-link text-danger">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Déconnexion</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- ============ CONTENU DROIT ============ -->
+    <div class="app-main">
+        <!-- Topbar -->
+        <header class="app-topbar">
+            <button class="btn btn-link text-dark d-lg-none" id="sidebarToggle">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <div class="topbar-title">
+                {% block page_title %}{% endblock %}
+            </div>
+            <div class="topbar-user ms-auto">
+                <div class="dropdown">
+                    <a class="dropdown-toggle d-flex align-items-center gap-2 text-decoration-none text-dark"
+                       data-bs-toggle="dropdown" href="#">
+                        <div class="user-avatar">
                             {{ user.username|slice:":1"|upper }}
                         </div>
-                        <span class="d-none d-lg-inline">{{ user.get_full_name|default:user.username }}</span>
+                        <div class="d-none d-md-block text-start">
+                            <div class="fw-semibold small">{{ user.get_full_name|default:user.username }}</div>
+                            <div class="text-muted" style="font-size: 0.72rem;">{{ user.get_role_display }}</div>
+                        </div>
+                        <i class="bi bi-chevron-down small"></i>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                        <li><div class="px-3 py-2">
-                            <div class="fw-bold">{{ user.get_full_name|default:user.username }}</div>
-                            <small class="text-muted">{{ user.get_role_display }}</small>
-                        </div></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:profil' %}">
+                            <i class="bi bi-person"></i> Mon profil
+                        </a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{% url 'accounts:profil' %}"><i class="bi bi-person"></i> Mon profil</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right"></i> Déconnexion</a></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                            <i class="bi bi-box-arrow-right"></i> Déconnexion
+                        </a></li>
                     </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-{% endif %}
+                </div>
+            </div>
+        </header>
 
-<main class="container-fluid px-4 py-4">
-    {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'danger' %}exclamation-octagon{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endfor %}
-    {% endif %}
-    {% block content %}{% endblock %}
-</main>
+        <!-- Contenu principal -->
+        <main class="app-content">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'danger' %}exclamation-octagon{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="app-footer">
+            © 2026 EJCC – BRIKIN. Tous droits réservés.
+        </footer>
+    </div>
+
+    <!-- Overlay mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+</div>
+{% else %}
+    {% block auth_content %}{% endblock %}
+{% endif %}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-// Auto-dismiss alerts after 5s
+// Auto-dismiss alerts
 setTimeout(() => {
     document.querySelectorAll('.alert-dismissible').forEach(el => {
-        new bootstrap.Alert(el).close();
+        try { new bootstrap.Alert(el).close(); } catch(e) {}
     });
 }, 5000);
 
-// Formatage automatique des montants
-document.querySelectorAll('input[type="number"]').forEach(input => {
-    input.addEventListener('blur', () => {
-        if (input.value && !isNaN(input.value)) {
-            input.value = parseFloat(input.value).toFixed(2);
-        }
+// Sidebar toggle mobile
+const sidebarToggle = document.getElementById('sidebarToggle');
+const appSidebar = document.getElementById('appSidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', () => {
+        appSidebar.classList.toggle('show');
+        sidebarOverlay.classList.toggle('show');
     });
-});
+    sidebarOverlay.addEventListener('click', () => {
+        appSidebar.classList.remove('show');
+        sidebarOverlay.classList.remove('show');
+    });
+}
 </script>
 {% block extra_js %}{% endblock %}
 </body>

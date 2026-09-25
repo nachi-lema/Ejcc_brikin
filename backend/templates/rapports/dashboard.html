@@ -1,94 +1,317 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard{% endblock %}
+{% block page_title %}<i class="bi bi-speedometer2 text-primary"></i> Tableau de bord{% endblock %}
+
 {% block content %}
-<h3 class="mb-4"><i class="bi bi-speedometer2"></i> Tableau de bord</h3>
 
+<!-- ===== KPI partenaires ===== -->
 <div class="row g-3 mb-4">
-    {% with s=stats %}
-    <div class="col-md-3"><div class="card stat-card border-0 shadow-sm bg-primary text-white">
-        <div class="card-body"><small>Total partenaires</small><h3 class="mb-0">{{ s.total_partenaires }}</h3></div></div></div>
-    <div class="col-md-3"><div class="card stat-card border-0 shadow-sm bg-success text-white">
-        <div class="card-body"><small>Partenaires actifs</small><h3 class="mb-0">{{ s.partenaires_actifs }}</h3></div></div></div>
-    <div class="col-md-3"><div class="card stat-card border-0 shadow-sm bg-secondary text-white">
-        <div class="card-body"><small>Désactivés</small><h3 class="mb-0">{{ s.partenaires_desactives }}</h3></div></div></div>
-    <div class="col-md-3"><div class="card stat-card border-0 shadow-sm bg-danger text-white">
-        <div class="card-body"><small>En retard</small><h3 class="mb-0">{{ s.partenaires_en_retard }}</h3></div></div></div>
-    {% endwith %}
-</div>
-
-<div class="row g-3 mb-4">
-    <div class="col-md-3"><div class="card border-0 shadow-sm">
-        <div class="card-body"><small class="text-muted">Encaissé aujourd'hui</small>
-            <h4 class="text-primary mb-0">{{ stats.encaisse_jour|floatformat:2 }} $</h4></div></div></div>
-    <div class="col-md-3"><div class="card border-0 shadow-sm">
-        <div class="card-body"><small class="text-muted">Ce mois</small>
-            <h4 class="text-primary mb-0">{{ stats.encaisse_mois|floatformat:2 }} $</h4></div></div></div>
-    <div class="col-md-3"><div class="card border-0 shadow-sm">
-        <div class="card-body"><small class="text-muted">Ce trimestre</small>
-            <h4 class="text-primary mb-0">{{ stats.encaisse_trimestre|floatformat:2 }} $</h4></div></div></div>
-    <div class="col-md-3"><div class="card border-0 shadow-sm">
-        <div class="card-body"><small class="text-muted">Cette année</small>
-            <h4 class="text-primary mb-0">{{ stats.encaisse_annee|floatformat:2 }} $</h4></div></div></div>
-</div>
-
-<div class="row g-3">
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white"><strong>Évolution des encaissements (6 derniers mois)</strong></div>
-            <div class="card-body"><canvas id="chartEncaissements" height="100"></canvas></div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card border-0 shadow-sm bg-primary text-white">
+            <div class="card-body">
+                <small>Total partenaires</small>
+                <h3 class="mb-0">{{ stats.total_partenaires }}</h3>
+                <i class="bi bi-people stat-icon"></i>
+            </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white"><strong>Synthèse</strong></div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card border-0 shadow-sm bg-success text-white">
             <div class="card-body">
-                <p><strong>Total attendu :</strong> {{ stats.total_attendu|floatformat:2 }} $</p>
-                <p><strong>Total payé :</strong> {{ stats.total_paye|floatformat:2 }} $</p>
-                <p><strong>Solde restant :</strong> <span class="text-danger fw-bold">{{ stats.solde_total|floatformat:2 }} $</span></p>
+                <small>Partenaires actifs</small>
+                <h3 class="mb-0">{{ stats.partenaires_actifs }}</h3>
+                <i class="bi bi-person-check stat-icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card border-0 shadow-sm bg-secondary text-white">
+            <div class="card-body">
+                <small>Désactivés</small>
+                <h3 class="mb-0">{{ stats.partenaires_desactives }}</h3>
+                <i class="bi bi-person-dash stat-icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card border-0 shadow-sm bg-danger text-white">
+            <div class="card-body">
+                <small>En retard</small>
+                <h3 class="mb-0">{{ stats.partenaires_en_retard }}</h3>
+                <i class="bi bi-exclamation-triangle stat-icon"></i>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card shadow-sm border-0 mt-4">
-    <div class="card-header bg-white"><strong>Derniers paiements</strong></div>
+<!-- ===== DEVISE USD ===== -->
+<h6 class="text-muted text-uppercase fw-bold mb-3" style="letter-spacing: 1px; font-size: 0.78rem;">
+    <i class="bi bi-currency-dollar"></i> Encaissements en USD
+</h6>
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+        <div class="currency-card usd">
+            <div class="currency-symbol">$</div>
+            <div class="currency-label">Aujourd'hui</div>
+            <div class="currency-value">{{ devises.USD.jour|floatformat:2 }} $</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="currency-card usd">
+            <div class="currency-symbol">$</div>
+            <div class="currency-label">Ce mois</div>
+            <div class="currency-value">{{ devises.USD.mois|floatformat:2 }} $</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="currency-card usd">
+            <div class="currency-symbol">$</div>
+            <div class="currency-label">Ce trimestre</div>
+            <div class="currency-value">{{ devises.USD.trimestre|floatformat:2 }} $</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="currency-card usd">
+            <div class="currency-symbol">$</div>
+            <div class="currency-label">Cette année</div>
+            <div class="currency-value">{{ devises.USD.annee|floatformat:2 }} $</div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== DEVISE CDF ===== -->
+<h6 class="text-muted text-uppercase fw-bold mb-3" style="letter-spacing: 1px; font-size: 0.78rem;">
+    <i class="bi bi-cash"></i> Encaissements en CDF
+</h6>
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+        <div class="currency-card cdf">
+            <div class="currency-symbol">FC</div>
+            <div class="currency-label">Aujourd'hui</div>
+            <div class="currency-value">{{ devises.CDF.jour|floatformat:0 }} FC</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="currency-card cdf">
+            <div class="currency-symbol">FC</div>
+            <div class="currency-label">Ce mois</div>
+            <div class="currency-value">{{ devises.CDF.mois|floatformat:0 }} FC</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="currency-card cdf">
+            <div class="currency-symbol">FC</div>
+            <div class="currency-label">Ce trimestre</div>
+            <div class="currency-value">{{ devises.CDF.trimestre|floatformat:0 }} FC</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="currency-card cdf">
+            <div class="currency-symbol">FC</div>
+            <div class="currency-label">Cette année</div>
+            <div class="currency-value">{{ devises.CDF.annee|floatformat:0 }} FC</div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SYNTHÈSE & GRAPHIQUE ===== -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <strong><i class="bi bi-graph-up-arrow text-primary"></i> Évolution des encaissements (6 mois)</strong>
+            </div>
+            <div class="card-body">
+                <canvas id="chartEncaissements" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white">
+                <strong><i class="bi bi-wallet2 text-success"></i> Synthèse USD</strong>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">Total attendu</span>
+                    <strong>{{ devises.USD.total_attendu|floatformat:2 }} $</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">Total payé</span>
+                    <strong class="text-success">{{ devises.USD.total_paye|floatformat:2 }} $</strong>
+                </div>
+                <hr class="my-2">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted small">Solde restant</span>
+                    <strong class="{% if devises.USD.solde > 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ devises.USD.solde|floatformat:2 }} $
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <strong><i class="bi bi-wallet2 text-primary"></i> Synthèse CDF</strong>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">Total attendu</span>
+                    <strong>{{ devises.CDF.total_attendu|floatformat:0 }} FC</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">Total payé</span>
+                    <strong class="text-success">{{ devises.CDF.total_paye|floatformat:0 }} FC</strong>
+                </div>
+                <hr class="my-2">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted small">Solde restant</span>
+                    <strong class="{% if devises.CDF.solde > 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ devises.CDF.solde|floatformat:0 }} FC
+                    </strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== DERNIERS PAIEMENTS ===== -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <strong><i class="bi bi-clock-history text-primary"></i> Derniers paiements</strong>
+        <a href="{% url 'finances:paiements_liste' %}" class="btn btn-sm btn-outline-primary">
+            Voir tout <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
     <div class="table-responsive">
-        <table class="table table-hover mb-0">
-            <thead class="table-light"><tr><th>Référence</th><th>Partenaire</th><th>Montant</th><th>Date</th><th>Mode</th></tr></thead>
-            <tbody>
-            {% for p in derniers_paiements %}
+        <table class="table table-hover align-middle mb-0">
+            <thead>
                 <tr>
-                    <td><a href="{% url 'finances:paiement_detail' p.pk %}">{{ p.reference }}</a></td>
-                    <td>{{ p.partenaire.nom_complet }}</td>
-                    <td><strong>{{ p.montant }} {{ p.devise }}</strong></td>
-                    <td>{{ p.date_paiement|date:"d/m/Y" }}</td>
-                    <td><span class="badge bg-info">{{ p.get_mode_paiement_display }}</span></td>
+                    <th>Référence</th>
+                    <th>Partenaire</th>
+                    <th>Montant</th>
+                    <th>Date</th>
+                    <th>Mode</th>
+                    <th>Par</th>
                 </tr>
-            {% empty %}
-                <tr><td colspan="5" class="text-center text-muted py-3">Aucun paiement</td></tr>
-            {% endfor %}
+            </thead>
+            <tbody>
+                {% for p in derniers_paiements %}
+                <tr>
+                    <td>
+                        <a href="{% url 'finances:paiement_detail' p.pk %}" class="text-decoration-none">
+                            <code>{{ p.reference }}</code>
+                        </a>
+                    </td>
+                    <td>
+                        <div class="fw-semibold">{{ p.partenaire.nom_complet }}</div>
+                        <small class="text-muted">{{ p.partenaire.code_partenaire }}</small>
+                    </td>
+                    <td>
+                        <span class="fw-bold {% if p.devise == 'USD' %}text-success{% else %}text-primary{% endif %}">
+                            {{ p.montant|floatformat:2 }} {{ p.devise }}
+                        </span>
+                    </td>
+                    <td>{{ p.date_paiement|date:"d/m/Y" }}</td>
+                    <td>
+                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+                            {{ p.get_mode_paiement_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <small>{{ p.enregistre_par.get_full_name|default:p.enregistre_par.username }}</small>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state py-4">
+                            <i class="bi bi-inbox"></i>
+                            <p class="mb-0">Aucun paiement enregistré</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
 
 {% endblock %}
+
 {% block extra_js %}
 <script>
-const ctx = document.getElementById('chartEncaissements');
-new Chart(ctx, {
+const chartLabels = {{ chart_labels|safe }};
+const chartUSD = {{ chart_usd|safe }};
+const chartCDF = {{ chart_cdf|safe }};
+
+new Chart(document.getElementById('chartEncaissements'), {
     type: 'line',
     data: {
-        labels: {{ chart_labels|safe }},
-        datasets: [{
-            label: 'Encaissements',
-            data: {{ chart_values|safe }},
-            borderColor: '#0d6efd',
-            backgroundColor: 'rgba(13,110,253,0.1)',
-            fill: true, tension: 0.3
-        }]
+        labels: chartLabels,
+        datasets: [
+            {
+                label: 'USD ($)',
+                data: chartUSD,
+                borderColor: '#059669',
+                backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                fill: true,
+                tension: 0.35,
+                borderWidth: 3,
+                pointBackgroundColor: '#059669',
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                yAxisID: 'y',
+            },
+            {
+                label: 'CDF (FC)',
+                data: chartCDF,
+                borderColor: '#1d4ed8',
+                backgroundColor: 'rgba(29, 78, 216, 0.1)',
+                fill: true,
+                tension: 0.35,
+                borderWidth: 3,
+                pointBackgroundColor: '#1d4ed8',
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                yAxisID: 'y1',
+            }
+        ]
     },
-    options: { responsive: true, plugins: { legend: { display: false } } }
+    options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { position: 'top', labels: { usePointStyle: true, padding: 15 } },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        const suffix = ctx.dataset.label.includes('USD') ? ' $' : ' FC';
+                        return ctx.dataset.label + ' : ' + ctx.parsed.y.toLocaleString('fr-FR') + suffix;
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: { display: true, text: 'USD ($)', color: '#059669' },
+                ticks: { color: '#059669' },
+                grid: { color: 'rgba(5, 150, 105, 0.08)' }
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: { display: true, text: 'CDF (FC)', color: '#1d4ed8' },
+                ticks: { color: '#1d4ed8' },
+                grid: { drawOnChartArea: false }
+            }
+        }
+    }
 });
 </script>
 {% endblock %}

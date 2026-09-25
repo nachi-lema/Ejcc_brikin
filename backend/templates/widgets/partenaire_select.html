@@ -1,0 +1,19 @@
+<!-- templates/widgets/partenaire_select.html -->
+<select name="partenaire" class="form-select" id="id_partenaire" required>
+    <option value="">---------</option>
+    {% for p in partenaires %}
+    <option value="{{ p.pk }}"
+            data-nom="{{ p.nom_complet }}"
+            data-code="{{ p.code_partenaire }}"
+            data-tel="{{ p.telephone }}"
+            data-contribution="{{ p.montant_contribution }}"
+            data-devise="{{ p.devise }}"
+            data-frequence="{{ p.get_frequence_display }}"
+            data-statut="{{ p.statut }}"
+            data-totalpaye="{{ p.total_paye|floatformat:2 }}"
+            data-solde="{{ p.solde|floatformat:2 }}"
+            {% if form.partenaire.value|stringformat:"s" == p.pk|stringformat:"s" %}selected{% endif %}>
+        {{ p.code_partenaire }} — {{ p.nom_complet }}
+    </option>
+    {% endfor %}
+</select>
