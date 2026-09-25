@@ -4,9 +4,9 @@ from django.utils import timezone
 
 
 class TypePartenaire(models.TextChoices):
-    PARTICULIER = 'PARTICULIER', 'Particulier'
-    ORGANISATION = 'ORGANISATION', 'Organisation'
     MEMBRE = 'MEMBRE', 'Membre'
+    INDIVIDU = 'INDIVIDU', 'Individu'
+    ORGANISATION = 'ORGANISATION', 'Organisation'
 
 
 class Frequence(models.TextChoices):
@@ -36,7 +36,7 @@ class Partenaire(models.Model):
     telephone = models.CharField('Téléphone', max_length=30)
     email = models.EmailField('Email', blank=True)
     adresse = models.CharField('Adresse', max_length=255, blank=True)
-    type_partenaire = models.CharField('Type', max_length=20, choices=TypePartenaire.choices, default=TypePartenaire.PARTICULIER)
+    type_partenaire = models.CharField('Type', max_length=20, choices=TypePartenaire.choices, default=TypePartenaire.MEMBRE)
     date_adhesion = models.DateField('Date d\'adhésion', default=timezone.now)
     montant_contribution = models.DecimalField('Montant contribution', max_digits=12, decimal_places=2, default=0)
     frequence = models.CharField('Fréquence', max_length=20, choices=Frequence.choices, default=Frequence.MENSUELLE)

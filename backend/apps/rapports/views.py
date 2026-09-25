@@ -94,6 +94,115 @@ def dashboard(request):
 
 
 @login_required
+def rapport_mensuel(request):
+    today = timezone.now().date()
+
+    try:
+        annee = int(request.GET.get('annee', today.year))
+        mois = int(request.GET.get('mois', today.month))
+    except ValueError:
+        annee = today.year
+        mois = today.month
+
+    # Sécurisation du mois
+    mois = max(1, min(12, mois))
+
+    debut = date(annee, mois, 1)
+
+    # Premier jour du mois suivant
+    if mois == 12:
+        fin = date(annee + 1, 1, 1) - timedelta(days=1)
+    else:
+        fin = date(annee, mois + 1, 1) - timedelta(days=1)
+
+    # Paiements actifs de la période
+    paiements = Paiement.objects.filter(
+        statut=StatutPaiement.ACTIF,
+        date_paiement__gte=debut,
+        date_paiement__lte=fin
+    ).select_related(
+        'partenaire',
+        'enregistre_par'
+    )
+
+    # Séparation USD / CDF
+    devises = {}
+
+    for devise in ['USD', 'CDF']:
+        total = _somme(paiements, devise)
+
+        devises[devise] = {
+            'total': total,
+            'nb': paiements.filter(devise=devise).count(),
+        }
+
+    # Répartition par jour
+    par_jour = []
+
+    jour = debut
+
+    while jour <= fin:
+        total_usd = _somme(
+            paiements.filter(date_paiement=jour),
+            'USD'
+        )
+
+        total_cdf = _somme(
+            paiements.filter(date_paiement=jour),
+            'CDF'
+        )
+
+        par_jour.append({
+            'date': jour,
+            'label': jour.strftime('%d/%m'),
+            'usd': total_usd,
+            'cdf': total_cdf,
+        })
+
+        jour += timedelta(days=1)
+
+    # Répartition par mode de paiement
+    par_mode = []
+
+    for mode_code, mode_label in Paiement._meta.get_field(
+        'mode_paiement'
+    ).choices:
+
+        total_usd = _somme(
+            paiements.filter(mode_paiement=mode_code),
+            'USD'
+        )
+
+        total_cdf = _somme(
+            paiements.filter(mode_paiement=mode_code),
+            'CDF'
+        )
+
+        if total_usd or total_cdf:
+            par_mode.append({
+                'mode': mode_label,
+                'usd': total_usd,
+                'cdf': total_cdf,
+            })
+
+    return render(
+        request,
+        'rapports/rapport_mensuel.html',
+        {
+            'annee': annee,
+            'mois': mois,
+            'debut': debut,
+            'fin': fin,
+            'paiements': paiements,
+            'devises': devises,
+            'par_jour': par_jour,
+            'par_mode': par_mode,
+            'nb_paiements': paiements.count(),
+        }
+    )
+
+
+@login_required
 def rapport_trimestriel(request):
     today = timezone.now().date()
     try:
@@ -215,3 +324,63 @@ def rapport_annuel(request):
         'par_mode': par_mode,
         'nb_paiements': paiements.count(),
     })
+
+
+@login_required
+def rapport_partenaire(request, pk):
+    partenaire = Partenaire.objects.get(pk=pk)
+
+    paiements = Paiement.objects.filter(
+        partenaire=partenaire,
+        statut=StatutPaiement.ACTIF
+    ).select_related(
+        'partenaire',
+        'enregistre_par'
+    ).order_by('-date_paiement', '-created_at')
+
+    # Totaux par devise
+    devises = {}
+
+    for devise in ['USD', 'CDF']:
+        total = _somme(paiements, devise)
+
+        devises[devise] = {
+            'total': total,
+            'nb': paiements.filter(devise=devise).count(),
+        }
+
+    # Total attendu
+    contributions_attendues = ContributionAttendue.objects.filter(
+        partenaire=partenaire
+    ).exclude(
+        statut='ANNULE'
+    )
+
+    attendus = {}
+
+    for devise in ['USD', 'CDF']:
+        montant_attendu = contributions_attendues.filter(
+            partenaire__devise=devise
+        ).aggregate(
+            total=Sum('montant_attendu')
+        )['total'] or Decimal('0')
+
+        montant_paye = devises[devise]['total']
+
+        attendus[devise] = {
+            'attendu': montant_attendu,
+            'paye': montant_paye,
+            'solde': montant_attendu - montant_paye,
+        }
+
+    return render(
+        request,
+        'rapports/rapport_partenaire.html',
+        {
+            'partenaire': partenaire,
+            'paiements': paiements,
+            'devises': devises,
+            'attendus': attendus,
+            'nb_paiements': paiements.count(),
+        }
+    )
